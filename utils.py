@@ -1,4 +1,6 @@
 from itertools import combinations
+import os
+import json
 
 import numpy as np
 import torch
@@ -192,3 +194,27 @@ def RandomNegativeTripletSelector(margin, cpu=False): return FunctionNegativeTri
 def SemihardNegativeTripletSelector(margin, cpu=False): return FunctionNegativeTripletSelector(margin=margin,
                                                                                   negative_selection_fn=lambda x: semihard_negative(x, margin),
                                                                                   cpu=cpu)
+
+
+def get_data(data_path):
+    img_list = {}
+    item_dict = {}
+    for file_type in ['train', 'validation']:
+        img_list[file_type] = []
+        item_dict[file_type] = {}
+        item_idx = 0
+        for file_name in os.listdir(os.path.join(data_path,file_type,'annos')):
+            anno = json.load(open(os.path.join(data_path,file_type,'annos',file_name)))
+            source_type = 0 if anno['source'] == 'user' else 1
+            pair_id = str(anno['pair_id'])
+            for key in anno.keys():
+                if key not in ['source', 'pair_id'] and anno[key]['style'] > 0:
+                    bounding_box = np.asarray(anno[key]['bounding_box'], dtype = int)
+                    cate_id = anno[key]['category_id']
+                    if '_'.join([pair_id, key]) not in item_dict[file_type].keys():
+                        item_dict[file_type]['_'.join([pair_id,key])] = item_idx
+                        item_idx += 1
+                    img_list[file_type].append([os.path.join(data_path,file_type,'image', file_name.split('.')[0]+'.jpg'),
+                                    item_dict[file_type]['_'.join([pair_id, key])], cate_id, bounding_box, source_type])
+        img_list[file_type] = np.asarray(img_list[file_type], dtype=object)
+    return img_list, data_path, item_dict
