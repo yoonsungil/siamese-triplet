@@ -146,7 +146,7 @@ class FunctionNegativeTripletSelector(TripletSelector):
         self.margin = margin
         self.negative_selection_fn = negative_selection_fn
 
-    def get_triplets(self, embeddings, labels):
+    def get_triplets(self, embeddings, labels, sources):
         if self.cpu:
             embeddings = embeddings.cpu()
         distance_matrix = pdist(embeddings)
@@ -156,12 +156,17 @@ class FunctionNegativeTripletSelector(TripletSelector):
         triplets = []
 
         for label in set(labels):
-            label_mask = (labels == label)
-            label_indices = np.where(label_mask)[0]
-            if len(label_indices) < 2:
+            anchor = np.where((labels == label) & (sources == 0).detach().cpu().numpy())[0]
+            if len(anchor) < 1:
                 continue
-            negative_indices = np.where(np.logical_not(label_mask))[0]
-            anchor_positives = list(combinations(label_indices, 2))  # All anchor-positive pairs
+            else:
+                anchor = anchor.item()
+            label_mask = (labels == label)
+            positive_indices = np.where(label_mask & (sources == 1).detach().cpu().numpy())[0]
+            if len(positive_indices) < 1:
+                continue
+            negative_indices = np.where(np.logical_not(label_mask) & (sources == 1).detach().cpu().numpy())[0]
+            anchor_positives = [[anchor, pos_ind] for pos_ind in positive_indices]  # All anchor-positive pairs
             anchor_positives = np.array(anchor_positives)
 
             ap_distances = distance_matrix[anchor_positives[:, 0], anchor_positives[:, 1]]
@@ -174,7 +179,9 @@ class FunctionNegativeTripletSelector(TripletSelector):
                     triplets.append([anchor_positive[0], anchor_positive[1], hard_negative])
 
         if len(triplets) == 0:
-            triplets.append([anchor_positive[0], anchor_positive[1], negative_indices[0]])
+            label, cnt = np.unique(labels, return_counts=True)
+            label = label[cnt >= 2][0]
+            triplets.append([np.where(labels == label)[0][0], np.where(labels == label)[0][1], np.where(labels != label)[0][0]])
 
         triplets = np.array(triplets)
 
