@@ -30,11 +30,11 @@ if device == "cuda":
 
 kwargs = {'num_workers': 4, 'pin_memory': True} if device == 'cuda' else {}
 train_dataset = DeepFashionDataset(img_list['train'])
-train_batch_sampler = BalancedBatchSampler(train_dataset.labels, train_dataset.source, n_classes=32, n_sample=4)
+train_batch_sampler = BalancedBatchSampler(train_dataset.labels, train_dataset.source, n_classes=32, n_samples=4)
 online_train_loader = DataLoader(train_dataset, batch_sampler=train_batch_sampler, **kwargs)
 
 test_dataset = DeepFashionDataset(img_list['validation'])
-test_batch_sampler = BalancedBatchSampler(test_dataset.labels, test_dataset.source, n_classes=32, n_sample=4)
+test_batch_sampler = BalancedBatchSampler(test_dataset.labels, test_dataset.source, n_classes=32, n_samples=4)
 online_test_loader = DataLoader(test_dataset, batch_sampler=test_batch_sampler, **kwargs)
 
 margin = 1.

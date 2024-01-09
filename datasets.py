@@ -182,7 +182,7 @@ class BalancedBatchSampler(BatchSampler):
                     np.random.shuffle(self.label_to_indices[class_][0])
                     self.used_label_indices_count[class_][0] = 0
                 self.used_label_indices_count[class_][1] += self.n_samples - 1
-                if self.used_label_indices_count[class_][1] + self.nsample - 1 > len(self.label_to_indices[class_][1]):
+                if self.used_label_indices_count[class_][1] + self.n_samples - 1 > len(self.label_to_indices[class_][1]):
                     np.random.shuffle(self.label_to_indices[class_][1])
                     self.used_label_indices_count[class_][1] = 0
                                 
@@ -196,6 +196,8 @@ class BalancedBatchSampler(BatchSampler):
 class DeepFashionDataset(Dataset):
     def __init__(self, dataset):
         self.dataset = dataset
+        self.labels = self.dataset[:,1]
+        self.source = self.dataset[:,4]
         self.transform = transforms.Compose([
             transforms.Resize((224,224)),
             transforms.ToTensor(),
