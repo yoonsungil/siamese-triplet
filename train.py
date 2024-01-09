@@ -24,7 +24,7 @@ backbone = torch.hub.load('pytorch/vision:v0.6.0', 'resnet50', pretrained=False)
 model = ResNet50basedNet(backbone)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 if device == "cuda":
-    if torch.cuda.device_cournt() > 1:
+    if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
     model.to(device)
 
