@@ -19,7 +19,7 @@ import sys
 import argparse
 
 model_save_path = "./result/"
-img_list, base_path, item_dict = get_data('./')
+img_list, base_path, item_dict = get_data('C:/Users/y2657/sungil/data/image')
 backbone = torch.hub.load('pytorch/vision:v0.6.0', 'resnet50', pretrained=False)
 model = ResNet50basedNet(backbone)
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -45,4 +45,4 @@ scheduler = lr_scheduler.StepLR(optimizer, 5, gamma=0.1, last_epoch=-1)
 n_epochs = 20
 log_interval = 200
 
-fit(online_train_loader, online_test_loader, model, loss_fn, optimizer, scheduler, n_epochs, True, log_interval, model_save_path, metrics=[AverageNonzeroTripletsMetric()])
+fit(online_train_loader, online_test_loader, model, loss_fn, optimizer, scheduler, n_epochs, False, log_interval, model_save_path, metrics=[AverageNonzeroTripletsMetric()])

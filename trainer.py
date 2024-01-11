@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import time
+import os
 
 def fit(train_loader, val_loader, model, loss_fn, optimizer, scheduler, n_epochs, cuda, log_interval, model_save_path, metrics=[], start_epoch=0):
     """
@@ -27,7 +28,8 @@ def fit(train_loader, val_loader, model, loss_fn, optimizer, scheduler, n_epochs
         message = 'Epoch: {}/{}. Train set: Average loss: {:.4f} Elapsed time: {}s'.format(epoch + 1, n_epochs, train_loss, int(time.time() - start_time))
         for metric in metrics:
             message += '\t{}: {}'.format(metric.name(), metric.value())
-
+            
+        torch.save(model.module.state_dict(), os.path.join(model_save_path, '{}.pth'.format(str(epoch).zfill(5))))
         val_loss, metrics = test_epoch(val_loader, model, loss_fn, cuda, metrics)
         val_loss /= len(val_loader)
         
@@ -51,7 +53,7 @@ def train_epoch(train_loader, model, loss_fn, optimizer, cuda, log_interval, met
     losses = []
     total_loss = 0
 
-    for batch_idx, (data, target, _, _, soruce) in enumerate(train_loader):
+    for batch_idx, (data, target) in enumerate(train_loader):
         target = target if len(target) > 0 else None
         if not type(data) in (tuple, list):
             data = (data,)
@@ -59,8 +61,6 @@ def train_epoch(train_loader, model, loss_fn, optimizer, cuda, log_interval, met
             data = tuple(d.cuda() for d in data)
             if target is not None:
                 target = target.cuda()
-            if source is not None:
-                source = source.cuda()
 
 
         optimizer.zero_grad()
@@ -73,10 +73,6 @@ def train_epoch(train_loader, model, loss_fn, optimizer, cuda, log_interval, met
         if target is not None:
             target = (target,)
             loss_inputs += target
-            
-        if source is not None:
-            source = (source,)
-            loss_inputs += source
 
         loss_outputs = loss_fn(*loss_inputs)
         loss = loss_outputs[0] if type(loss_outputs) in (tuple, list) else loss_outputs
@@ -108,7 +104,7 @@ def test_epoch(val_loader, model, loss_fn, cuda, metrics):
             metric.reset()
         model.eval()
         val_loss = 0
-        for batch_idx, (data, target, _, _, source) in enumerate(val_loader):
+        for batch_idx, (data, target) in enumerate(val_loader):
             target = target if len(target) > 0 else None
             if not type(data) in (tuple, list):
                 data = (data,)
@@ -116,8 +112,6 @@ def test_epoch(val_loader, model, loss_fn, cuda, metrics):
                 data = tuple(d.cuda() for d in data)
                 if target is not None:
                     target = target.cuda()
-                if source is not None:
-                    source = source.cuda()
 
             outputs = model(*data)
 
@@ -127,9 +121,6 @@ def test_epoch(val_loader, model, loss_fn, cuda, metrics):
             if target is not None:
                 target = (target,)
                 loss_inputs += target
-            if source is not None:
-                source = (source,)
-                loss_inputs += source
 
             loss_outputs = loss_fn(*loss_inputs)
             loss = loss_outputs[0] if type(loss_outputs) in (tuple, list) else loss_outputs
