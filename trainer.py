@@ -35,7 +35,7 @@ def fit(train_loader, val_loader, model, loss_fn, optimizer, scheduler, n_epochs
         
         if best_val_loss is None or best_val_loss > val_loss:
             best_val_loss = val_loss
-            torch.save(model.module.state_dict(), os.path.join(model_save_path, '{}.pth'.format(str(epoch).zfill(5))))
+            torch.save(model.state_dict(), os.path.join(model_save_path, '{}.pth'.format(str(epoch).zfill(5))))
 
         message += '\nEpoch: {}/{}. Validation set: Average loss: {:.4f}'.format(epoch + 1, n_epochs,
                                                                                  val_loss)

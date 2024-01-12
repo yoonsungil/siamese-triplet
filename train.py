@@ -22,7 +22,13 @@ model_save_path = "./result/"
 img_list, base_path, item_dict = get_data('C:/Users/y2657/sungil/data/image')
 backbone = torch.hub.load('pytorch/vision:v0.6.0', 'resnet50', pretrained=False)
 model = ResNet50basedNet(backbone)
+cuda = torch.cuda.is_available()
 device = "cuda" if torch.cuda.is_available() else "cpu"
+if not os.path.exists(model_save_path):
+      os.mkdir(model_save_path)
+else:
+  model_name = sorted(os.listdir(model_save_path))[-1]
+  model.load_state_dict(torch.load(os.path.join(model_save_path,model_name)))
 if device == "cuda":
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
@@ -45,4 +51,4 @@ scheduler = lr_scheduler.StepLR(optimizer, 5, gamma=0.1, last_epoch=-1)
 n_epochs = 20
 log_interval = 200
 
-fit(online_train_loader, online_test_loader, model, loss_fn, optimizer, scheduler, n_epochs, False, log_interval, model_save_path, metrics=[AverageNonzeroTripletsMetric()])
+fit(online_train_loader, online_test_loader, model, loss_fn, optimizer, scheduler, n_epochs, cuda, log_interval, model_save_path, metrics=[AverageNonzeroTripletsMetric()])
