@@ -29,13 +29,13 @@ def fit(train_loader, val_loader, model, loss_fn, optimizer, scheduler, n_epochs
         for metric in metrics:
             message += '\t{}: {}'.format(metric.name(), metric.value())
             
-        torch.save(model.module.state_dict(), os.path.join(model_save_path, '{}.pth'.format(str(epoch).zfill(5))))
+        torch.save(model.state_dict(), os.path.join(model_save_path, '{}.pth'.format(str(epoch).zfill(5))))
         val_loss, metrics = test_epoch(val_loader, model, loss_fn, cuda, metrics)
         val_loss /= len(val_loader)
         
         if best_val_loss is None or best_val_loss > val_loss:
             best_val_loss = val_loss
-            torch.save(model.module.state_dict(), model_save_path)
+            torch.save(model.module.state_dict(), os.path.join(model_save_path, '{}.pth'.format(str(epoch).zfill(5))))
 
         message += '\nEpoch: {}/{}. Validation set: Average loss: {:.4f}'.format(epoch + 1, n_epochs,
                                                                                  val_loss)
