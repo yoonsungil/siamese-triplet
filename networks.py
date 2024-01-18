@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -99,3 +100,23 @@ class ResNet50basedNet(nn.Module):
         x = x.view(x.size()[0], -1)
         x = self.fc(x)
         return x
+class Resnet101basedNet(nn.Module):
+    def __init__(self):
+        super(Resnet101basedNet, self).__init__()
+        
+        model = torch.hub.load('pytorch/vision:v0.6.0', 'resnet101', pretrained=False)
+        self.backbone = nn.Sequential(*list(model.children())[:-2])
+
+        self.max_pool = nn.AdaptiveMaxPool2d((1, 1))
+        self.fc = nn.Linear(2048, 128)
+        nn.init.kaiming_uniform_(self.fc.weight, a=1)
+        if self.fc.bias is not None:
+            nn.init.constant_(self.fc.bias, 0)
+
+    def forward(self, x):
+        x = self.backbone(x)
+        x = self.max_pool(x)
+        x = x.view(x.size()[0], -1)
+        x = self.fc(x)
+        x = F.normalize(x, p=2, dim=1)
+        return x    

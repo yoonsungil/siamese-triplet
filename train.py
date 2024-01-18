@@ -7,7 +7,7 @@ import torch.optim as optim
 # from torch.utils.tensorboard import SummaryWriter
 import torchvision
 
-from networks import EmbeddingNet, ResNet50basedNet
+from networks import EmbeddingNet, ResNet50basedNet, Resnet101basedNet
 from losses import OnlineTripletLoss
 from utils import AllTripletSelector, HardestNegativeTripletSelector, RandomNegativeTripletSelector, SemihardNegativeTripletSelector # Strategies for selecting triplets within a minibatch
 from utils import get_data
@@ -20,12 +20,11 @@ import argparse
 
 model_save_path = "./result/"
 img_list, base_path, item_dict = get_data('C:/Users/y2657/sungil/data/image')
-backbone = torch.hub.load('pytorch/vision:v0.6.0', 'resnet50', pretrained=False)
-model = ResNet50basedNet(backbone)
+model = Resnet101basedNet()
 cuda = torch.cuda.is_available()
 device = "cuda" if torch.cuda.is_available() else "cpu"
 if not os.path.exists(model_save_path):
-      os.mkdir(model_save_path)
+    os.mkdir(model_save_path)
 else:
   model_name = sorted(os.listdir(model_save_path))[-1]
   model.load_state_dict(torch.load(os.path.join(model_save_path,model_name)))
@@ -34,7 +33,7 @@ if device == "cuda":
         model = nn.DataParallel(model)
     model.to(device)
 
-kwargs = {'num_workers': 4, 'pin_memory': True} if device == 'cuda' else {}
+kwargs = {'num_workers': 8, 'pin_memory': True} if device == 'cuda' else {}
 train_dataset = DeepFashionDataset(img_list['train'])
 train_batch_sampler = BalancedBatchSampler(train_dataset.labels, train_dataset.source, n_classes=32, n_samples=4)
 online_train_loader = DataLoader(train_dataset, batch_sampler=train_batch_sampler, **kwargs)
