@@ -1,6 +1,9 @@
 import numpy as np
 from PIL import Image
+import cv2
+import os
 
+import torch
 from torch.utils.data import Dataset
 from torch.utils.data.sampler import BatchSampler
 from torchvision import transforms
@@ -226,3 +229,17 @@ class DeepFashionDataset(Dataset):
         image = self.transform(image)
 
         return image, ds[1] #, ds[2], i, ds[4]   #image , pair_id, category, source(user,shop)
+    
+class db_dataset(Dataset):
+    def __init__(self, gallery_dir):
+        img_fmt = ['jpg', 'png']
+        self.image_path = [file for file in os.listdir(gallery_dir) if file.split('.')[1] in img_fmt]
+        self.list_imgs = [torch.from_numpy(cv2.imread(os.path.join(gallery_dir, file))).permute(2, 0, 1) for file in self.image_path]
+        self.list_size = [(img.shape[1], img.shape[2]) for img in self.list_imgs]
+
+    def __len__(self):
+        return len(self.image_path)
+
+    def __getitem__(self, idx):
+        data = {'image': self.list_imgs[idx], 'height': self.list_size[idx][0], 'width': self.list_size[idx][1]}
+        return data
